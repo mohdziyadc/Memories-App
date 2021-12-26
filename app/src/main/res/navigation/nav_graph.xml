@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/placesFragment">
+
+    <fragment
+        android:id="@+id/placesFragment"
+        android:name="com.example.memories.PlacesFragment"
+        android:label="PlacesFragment" >
+        <action
+            android:id="@+id/action_placesFragment_to_placeFragment"
+            app:destination="@id/placeFragment" />
+        <action
+            android:id="@+id/action_placesFragment_to_newPlaceFragment"
+            app:destination="@id/newPlaceFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/placeFragment"
+        android:name="com.example.memories.PlaceFragment"
+        android:label="PlaceFragment" >
+        <action
+            android:id="@+id/action_placeFragment_to_placesFragment"
+            app:destination="@id/placesFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/newPlaceFragment"
+        android:name="com.example.memories.NewPlaceFragment"
+        android:label="NewPlaceFragment" >
+        <action
+            android:id="@+id/action_newPlaceFragment_to_placesFragment"
+            app:destination="@id/placesFragment" />
+    </fragment>
+</navigation>

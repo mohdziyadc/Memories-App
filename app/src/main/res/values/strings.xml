@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Memories</string>
+    <string name="new_memory">New Memory</string>
+    <string name="place">Place</string>
+</resources>
