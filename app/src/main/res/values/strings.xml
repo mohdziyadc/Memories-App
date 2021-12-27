@@ -2,4 +2,8 @@
     <string name="app_name">Memories</string>
     <string name="new_memory">New Memory</string>
     <string name="place">Place</string>
+    <string name="memory">Memory</string>
+
+    <string name="google_maps_API_KEY">AIzaSyABLmAyl_wUzouFWfS8LSBfOs5IkzJdMpw</string>
+<!--    add metadata to manifest-->
 </resources>

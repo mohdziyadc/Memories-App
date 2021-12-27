@@ -22,11 +22,11 @@
             android:layout_height="match_parent">
 
             <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/tvToolbarTitle"
+                android:id="@+id/memoryTitleTv"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center_vertical"
-                android:text="@string/place"
+                android:text="@string/memory"
                 android:textColor="@android:color/white"
                 android:textSize="32sp"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -47,25 +47,56 @@
         app:layout_constraintTop_toBottomOf="@+id/appBarLayout" />
 
     <TextView
+        android:id="@+id/aboutTV"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="About"
+        android:textColor="@color/purple_500"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textAllCaps="true"
+        android:layout_marginHorizontal="8dp"
+        android:layout_marginVertical="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/placeIV" />
+
+    <TextView
         android:id="@+id/place_desc"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Description about the place"
-        android:textSize="24sp"
-        android:layout_margin="16dp"
+        android:textSize="20sp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginHorizontal="8dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/placeIV" />
+        app:layout_constraintTop_toBottomOf="@id/aboutTV" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/mapBtn"
         style="@style/Widget.MaterialComponents.Button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
+        android:layout_margin="32dp"
         android:text="View on Map"
         app:cornerRadius="5dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/place_desc" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/deleteBtn"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:text="Delete Memory"
+        app:cornerRadius="5dp"
+        android:textColor="@color/red"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/mapBtn" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

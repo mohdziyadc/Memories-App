@@ -7,33 +7,58 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import kotlinx.android.synthetic.main.fragment_new_place.*
-import android.widget.DatePicker
+
 
 import android.app.DatePickerDialog
 import android.app.DatePickerDialog.OnDateSetListener
 import android.content.Intent
 import android.net.Uri
+import android.provider.MediaStore
 import android.provider.Settings
 import android.util.Log
-import android.widget.Toast
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
-import com.karumi.dexter.listener.PermissionDeniedResponse
-import com.karumi.dexter.listener.PermissionGrantedResponse
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
-import com.karumi.dexter.listener.single.PermissionListener
 import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
 
 import android.Manifest as Manifest
+import android.app.Activity.RESULT_OK
+import android.content.Context
+import android.content.ContextWrapper
+import android.graphics.Bitmap
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
+import com.bumptech.glide.Glide
+import com.example.memories.room.Memory
+import com.example.memories.viewmodel.MemoriesViewModel
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.widget.Autocomplete
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStream
+
 
 const val TAG = "NewPlaceFragment"
+const val CAMERA_REQUEST = 1
+const val IMAGE_DIR = "MemoriesDirectory"
+const val PLACES_REQUEST = 2
 
 class NewPlaceFragment:Fragment() {
+
+
+    private val viewModel:MemoriesViewModel by viewModels()
+
+    var mLatitude:Long? = 0L
+    var mLongitude:Long? = 0L
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -45,14 +70,18 @@ class NewPlaceFragment:Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        saveBtn.setOnClickListener {
-            findNavController().navigate(R.id.action_newPlaceFragment_to_placesFragment)
-        }
+
         toolbar.setNavigationOnClickListener {
             findNavController().navigate(R.id.action_newPlaceFragment_to_placesFragment)
         }
 
+        if(!Places.isInitialized()){
+            Places.initialize(requireActivity().applicationContext, resources.getString(R.string.google_maps_API_KEY))
+        }
         val myCalendar = Calendar.getInstance()
+
+
+
 
         val date =
             OnDateSetListener { _, year, month, day ->
@@ -89,7 +118,42 @@ class NewPlaceFragment:Fragment() {
 
         }
 
+        etLocation.setOnClickListener {
+            setupPlacesActivity()
+        }
 
+
+
+        saveBtn.setOnClickListener {
+            findNavController().navigate(R.id.action_newPlaceFragment_to_placesFragment)
+            insertMemory()
+        }
+
+
+    }
+
+    private fun setupPlacesActivity() {
+        val fields = listOf(
+            Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG, Place.Field.ADDRESS
+        )
+
+        val intent = Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields)
+            .build(requireActivity())
+
+        startActivityForResult(intent, PLACES_REQUEST)
+    }
+
+    private fun insertMemory(){
+        val memory = Memory(
+            id = 0,
+            title = etTitle.text.toString(),
+            desc = etDesc.text.toString(),
+            date = etDate.text.toString(),
+            location = etLocation.text.toString(),
+            image = viewModel.imageUri,
+        )
+
+        viewModel.insertMemory(memory)
     }
 
     private fun askForPermissions():Boolean{
@@ -124,11 +188,40 @@ class NewPlaceFragment:Fragment() {
     }
 
     private fun openCamera() {
-
+        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        if(cameraIntent.resolveActivity(requireActivity().packageManager)!= null){
+            startActivityForResult(cameraIntent, CAMERA_REQUEST)
+        }
     }
 
-    private fun openGallery() {
 
+    private fun openGallery() {
+        val galleryIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        galleryIntent.type = "image/*"
+        if(galleryIntent.resolveActivity(requireActivity().packageManager) != null){
+
+            startActivityForResult(Intent.createChooser(galleryIntent, "Select an image"), 0)
+
+        }
+    }
+
+    private fun saveImageToInternalStorage(bmp:Bitmap):Uri{
+
+        val wrapper = ContextWrapper(requireContext())
+        val directory = wrapper.getDir(IMAGE_DIR, Context.MODE_PRIVATE)
+        val file = File(directory, "${UUID.randomUUID()}.jpg")
+
+        try{
+            val stream:OutputStream = FileOutputStream(file)
+            bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+            stream.flush()
+            stream.close()
+
+        }catch (e:IOException){
+            e.printStackTrace()
+        }
+
+        return Uri.parse(file.absolutePath)
     }
 
     private fun showPermissionDialog() {
@@ -156,6 +249,42 @@ class NewPlaceFragment:Fragment() {
     private fun updateLabel(myCalendar:Calendar) {
         val myFormat = "MM/dd/yy"
         val dateFormat = SimpleDateFormat(myFormat, Locale.US)
-        etDate.setText(dateFormat.format(myCalendar.getTime()))
+        val date = dateFormat.format(myCalendar.getTime())
+        etDate.setText(date)
+    }
+
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if(requestCode==0 && resultCode == RESULT_OK){
+            val uri = data?.data
+            Glide.with(requireContext())
+                .load(uri)
+                .centerCrop()
+                .into(placeImg)
+            val bmp = MediaStore.Images.Media.getBitmap(requireActivity().contentResolver, uri)
+            viewModel.imageUri = saveImageToInternalStorage(bmp)
+            Log.d(TAG, "onActivityResult: ${viewModel.imageUri}")
+
+
+        } else
+        if(requestCode == CAMERA_REQUEST && resultCode == RESULT_OK){
+            val bmp = data?.extras?.get("data") as Bitmap
+            Glide.with(requireContext())
+                .load(bmp)
+                .centerCrop()
+                .into(placeImg)
+
+            viewModel.imageUri = saveImageToInternalStorage(bmp)
+            Log.d(TAG, "onActivityResult: ${viewModel.imageUri}")
+
+
+
+        } else if(requestCode == PLACES_REQUEST && resultCode == RESULT_OK){
+            val place:Place = Autocomplete.getPlaceFromIntent(data!!)
+            etLocation.setText(place.address)
+            mLatitude = place.latLng?.latitude?.toLong()
+            mLongitude = place.latLng?.longitude?.toLong()
+        }
     }
 }
