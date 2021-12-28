@@ -7,6 +7,7 @@ This is an app where you can save and view places where you created your favouri
  - MVVM Architecture
     - ViewModel
     - Repository
+    - LiveData for the list
  - Fragments and Jetpack Navigation
     - Navigation with Arguments
  - Android ROOM for data persistence.
